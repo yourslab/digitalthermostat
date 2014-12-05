@@ -3,6 +3,8 @@
 
 #include "buttons.h"
 
+extern volatile unsigned char button;
+
 void init_buttons() {
   PCICR |= (1<<PCIE0);
   PCMSK0 = 0b00110000;

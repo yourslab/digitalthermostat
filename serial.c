@@ -1,4 +1,7 @@
+#include <avr/io.h>
 #include "serial.h"
+
+extern char r_temp[4];
 
 UCSR0B |= (1 << TXEN0 | 1 << RXEN0);
 UCSR0C = (3 << UCSZ00);
