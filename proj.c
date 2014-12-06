@@ -86,7 +86,7 @@ int main() {
   init_all();
   sei();
 
-  //Print all needed labels
+  //print all needed labels
   set_labels();
 
   while(1) {
@@ -114,12 +114,24 @@ int main() {
       tx_temp(far);
       prevf = far;
     }
+    //valid serial value received
     if(prevrmtf != rmtfar && rmtfar != -128) {
       moveto(0xc0+12);
       sprintf(buff, "%d", rmtfar);
       stringout(buff);
       prevrmtf = rmtfar;
     }
+    //invalid serial value received
+    if(rmtfar == -128) {
+      moveto(0xc0+12);
+      if(prevrmtf != -128) {
+        sprintf(buff, "%d", prevrmtf);
+        stringout(buff);
+      } else {
+        stringout("NONE");
+      }
+    }
+
     moveto(0xd0); //remove cursor
     heat_or_cool(far); //turn on heater or cooler depending on temp
   }

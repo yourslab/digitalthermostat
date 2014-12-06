@@ -12,13 +12,16 @@ void init_serial() {
 }
 
 char rx_char() {
-  // Wait for receive complete flag to go high
-  while (!(UCSR0A & (1 << RXC0))) {}
-  return UDR0;
+  //if complete flag is high
+  if (UCSR0A & (1 << RXC0)) {
+    return UDR0;
+  } else {
+    return '\0';
+  }
 }
 
 void tx_char(char ch) {
-  // Wait for transmitter data register empty
+  //wait for transmitter data register empty
   while ((UCSR0A & (1<<UDRE0)) == 0) {}
   UDR0 = ch;
 }
@@ -29,31 +32,27 @@ char rx_temp() {
   unsigned char i;
   for(i=0; i<4; i++) {
     r_temp[i] = rx_char();
-    //validate chars
+    //validate chars (-128 is extremely unlikely)
+    if(r_temp[i] == '\0') {
+      return -128;
+    }
     if(i == 0) {
       if(r_temp[i] != '+' && r_temp[i] != '-') {
-        flag = 1;
+        return -128;
       }
-      break;
     } else if(i >= 1 && i <= 3) {
       if(r_temp[i] < '0' || r_temp[i] > '9') {
-        flag = 1;
+        return -128;
       }
-      break;
     }
   }
 
-  if(flag == 1) {
-    //unlikely to reach this temp
-    return -128;
-  } else {
-    //convert string to number
-    char rmt = (r_temp[1]-'0')*100 + (r_temp[2]-'0')*10 + (r_temp[3]-'0');
-    if(r_temp[0] == '-') {
-      rmt *= -1;
-    }
-    return rmt;
+  //convert string to number
+  char rmt = (r_temp[1]-'0')*100 + (r_temp[2]-'0')*10 + (r_temp[3]-'0');
+  if(r_temp[0] == '-') {
+    rmt = 0-rmt;
   }
+  return rmt;
 }
 
 
@@ -68,7 +67,7 @@ void tx_temp(char far) {
   t_temp[1] = (far/100)+'0';
   t_temp[2] = (far/10%10)+'0';
   t_temp[3] = (far%10)+'0';
-  
+
   unsigned char i;
   for(i=0; i<4; i++) {
     tx_char(t_temp[i]);
