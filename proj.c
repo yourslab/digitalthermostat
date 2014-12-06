@@ -8,17 +8,15 @@
 #include <avr/interrupt.h>
 #include <util/delay.h>
 
+#include "lcd.h"
 #include "ds1631.h"
 #include "buttons.h"
-#include "lcd.h"
 #include "rotary.h"
-//#include "serial.h"
+#include "serial.h"
 
-volatile short thres[2] = {70, 80};
+volatile char thres[2] = {70, 80};
 volatile unsigned char button = 1;
 volatile unsigned char state = 0; //0: 00, 1: 01, 2: 10, 3: 11
-//char r_temp[4];
-//char t_temp[4];
 
 void init_io_port(unsigned char b, unsigned char c, unsigned char d) {
   DDRB |= b;
@@ -26,7 +24,7 @@ void init_io_port(unsigned char b, unsigned char c, unsigned char d) {
   DDRD |= d;
 }
 
-short convert(unsigned char* celsius) {
+char convert(unsigned char* celsius) {
   //use appropriate formula depending on second degree of Celsius
   if(celsius[1]==0x80) {
     return (celsius[0]+1)*4/5 + celsius[0] + 32;
@@ -65,23 +63,24 @@ void init_all() {
   init_lcd();
   ds1631_init();
   ds1631_conv();
+  init_serial();
 }
 
 void set_labels() {
   stringout("Lo:");
-  moveto(0x80+8);
+  moveto(0x80+9);
   stringout("Hi:");
   moveto(0xc0);
   stringout("LC:");
   moveto(0xc0+8);
-  stringout("RM:");
+  stringout("RMT:");
 }
 
-int main(void) {
-  //Declare all essential variables
+int main() {
   char buff[5]; //buffer for printing to LCD later
-  short prevf = -32768; //for checking if temp changed
-  short prevthres[2] = {-32768, -32768}; //for checking if thres changed
+  char prevf = -128; //for checking if temp changed
+  char prevrmtf = -128; //for checking if prev changed
+  char prevthres[2] = {-128, -128}; //for checking if threshold changed
   unsigned char celsius[2]; //for storing temp in Celsius
 
   init_all();
@@ -93,25 +92,33 @@ int main(void) {
   while(1) {
     make_thres_valid();
     ds1631_temp(celsius);
-    short far = convert(celsius);
+    char far = convert(celsius);
+    char rmtfar = rx_temp();
 
     if(prevthres[0] != thres[0]) {
       moveto(0x80+3);
-      sprintf(buff, "%d ", thres[0]);
+      sprintf(buff, "%d  ", thres[0]);
       stringout(buff);
       prevthres[0] = thres[0];
     }
     if(prevthres[1] != thres[1]) {
-      moveto(0x80+11);
-      sprintf(buff, "%d ", thres[1]);
+      moveto(0x80+12);
+      sprintf(buff, "%d  ", thres[1]);
       stringout(buff);
       prevthres[1] = thres[1];
     }
     if(prevf != far) {
       moveto(0xc0+3);
-      sprintf(buff, "%d ", far);
+      sprintf(buff, "%d", far);
       stringout(buff);
+      tx_temp(far);
       prevf = far;
+    }
+    if(prevrmtf != rmtfar && rmtfar != -128) {
+      moveto(0xc0+12);
+      sprintf(buff, "%d", rmtfar);
+      stringout(buff);
+      prevrmtf = rmtfar;
     }
     moveto(0xd0); //remove cursor
     heat_or_cool(far); //turn on heater or cooler depending on temp

@@ -4,7 +4,7 @@
 #include "rotary.h"
 
 extern volatile unsigned char button;
-extern volatile short thres[2];
+extern volatile char thres[2];
 extern volatile unsigned char state; //0: 00, 1: 01, 2: 10, 3: 11
 
 void init_rotary() {

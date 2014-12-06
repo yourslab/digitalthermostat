@@ -1,3 +1,5 @@
+void init_serial();
 char rx_char();
 void tx_char(char ch);
-void get_temp();
+char rx_temp();
+void tx_temp(char far);
