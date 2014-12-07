@@ -64,16 +64,16 @@ void writebyte(unsigned char x, unsigned char rs) {
     PORTB |= 0x01;
   }
 
-  //set upper and lower bits
+  // Set upper and lower bits
   unsigned char upper = ((x & 0xF0) >> 4);
   unsigned char lower = (x & 0x0F);
 
-  //write upper bits
+  // Write upper bits
   writenibble(upper);
-  //write lower bits
+  // Write lower bits
   writenibble(lower);
 
-  //delay to finish
+  // Delay to finish
   _delay_ms(2);
 }
 
@@ -85,7 +85,7 @@ void writenibble(unsigned char x) {
   PORTD &= 0x0F;
   PORTD |= x;
 
-  //enable signal
+  // Enable signal
   PORTB |= 0x02;
   _delay_us(1);
   PORTB &= ~(0x02);

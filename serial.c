@@ -77,9 +77,9 @@ void tx_temp(char far) {
   } else {
     t_temp[0] = '-';
   }
-  t_temp[1] = (far/100)+'0';
-  t_temp[2] = (far/10%10)+'0';
-  t_temp[3] = (far%10)+'0';
+  t_temp[1] = (far/100)+'0'; // Hundreds digit
+  t_temp[2] = (far/10%10)+'0'; // Tens digit
+  t_temp[3] = (far%10)+'0'; // Ones digit
 
   unsigned char i;
   for(i=0; i<4; i++) {
