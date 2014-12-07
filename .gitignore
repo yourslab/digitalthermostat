@@ -1,2 +1,4 @@
 *.o
+main.elf
+main.hex
 !ds1631.o

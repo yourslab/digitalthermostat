@@ -10,12 +10,18 @@
 char rx_char();
 void tx_char(char ch);
 
+/*
+  init_serial - Sets the BUAD rate and other configurations
+*/
 void init_serial() {
   UBRR0 = MYUBRR; // Set baud rate
   UCSR0B |= (1 << TXEN0 | 1 << RXEN0);
   UCSR0C = (3 << UCSZ00);
 }
 
+/*
+  got_byte - Checks if there is an rx byte available.
+*/
 unsigned char got_byte() {
   // If complete flag is high
   if (UCSR0A & (1 << RXC0)) {
@@ -25,18 +31,28 @@ unsigned char got_byte() {
   }
 }
 
+/*
+  rx_char - Waits until an rx byte can be received
+*/
 char rx_char() {
  // Wait for receive complete flag to go high
  while (!(UCSR0A & (1 << RXC0))) {}
  return UDR0;
 }
 
+/*
+  tx_char - Transmits a tx byte for another Arduino
+*/
 void tx_char(char ch) {
   // Wait for transmitter data register empty
   while ((UCSR0A & (1<<UDRE0)) == 0) {}
   UDR0 = ch;
 }
 
+/*
+  get_rx_temp - Gets rx bytes, converts to valid value, then
+  passes it to a variable.
+*/
 void get_rx_temp(char* rmtfar) {
   char r_temp[4];
   unsigned char i;
@@ -63,8 +79,10 @@ void get_rx_temp(char* rmtfar) {
   *rmtfar = rmt;
 }
 
-
-
+/*
+  tx_temp - Converts local temp to bytes and passes it to 
+  tx_char(char ch) function.
+*/
 void tx_temp(char far) {
   char t_temp[5];
   if(far>=0) {

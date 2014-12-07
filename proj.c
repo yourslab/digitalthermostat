@@ -98,7 +98,7 @@ void set_labels() {
 }
 
 int main() {
-  char rmtfar;
+  char rmtfar; // Stores current temperature from a remote Arduino
   char buff[5]; // Buffer for printing to LCD later
   char prevf = -128; // For checking if temp changed
   char prevthres[2] = {-128, -128}; // For checking if threshold changed
@@ -145,7 +145,7 @@ int main() {
     }
     moveto(0xd0); // Remove cursor
 
-    heat_or_cool(far); // Turn on heater or cooler depending on temp
+    heat_or_cool(far);
   }
 
   while (1) {}
