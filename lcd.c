@@ -1,12 +1,12 @@
 #include <avr/io.h>
 #include <util/delay.h>
 
-#include "lcd.h"
+#include "header/lcd.h"
 
 void writenibble(unsigned char);
 
 /*
-  init_lcd - Do various things to initialize the LCD display
+  init_lcd - Do various things to initialize the LCD display.
 */
 void init_lcd() {
   _delay_ms(15);              // Delay at least 15ms
@@ -20,7 +20,7 @@ void init_lcd() {
   writenibble(0x03);          // Use writenibble to send 0011
   
   writenibble(0x02);          // Use writenibble to send 0010
-  _delay_ms(2);               // Function Set: 4-bit interface
+  _delay_ms(2);
   
   writebyte(0x28, 0x00);      // Function Set: 4-bit interface, 2 lines
   _delay_ms(2);
@@ -48,7 +48,7 @@ void stringout(char *str) {
 }
 
 /*
-  moveto - Move the cursor to the postion "pos"
+  moveto - Move the cursor to the postion "pos".
 */
 void moveto(unsigned char pos) {
   writebyte(pos, 0x00);
@@ -58,10 +58,11 @@ void moveto(unsigned char pos) {
   writebyte - Output a byte to the LCD display instruction register.
 */
 void writebyte(unsigned char x, unsigned char rs) {
-  //clear previous value in register
-  PORTB &= 0xFE;
-  //choose register
-  PORTB |= rs;
+  if(rs == 0x00) {
+    PORTB &= ~(0x01);
+  } else {
+    PORTB |= 0x01;
+  }
 
   //set upper and lower bits
   unsigned char upper = ((x & 0xF0) >> 4);
@@ -77,7 +78,7 @@ void writebyte(unsigned char x, unsigned char rs) {
 }
 
 /*
-  writenibble - Output four bits from "x" to the display
+  writenibble - Output four bits from "x" to the display.
 */
 void writenibble(unsigned char x) {
   x = (x << 4);

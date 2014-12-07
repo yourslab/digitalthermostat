@@ -6,26 +6,31 @@
 *************************************************************/
 #include <avr/io.h>
 #include <avr/interrupt.h>
-#include <util/delay.h>
 
-#include "lcd.h"
-#include "ds1631.h"
-#include "buttons.h"
-#include "rotary.h"
-#include "serial.h"
+#include "header/lcd.h"
+#include "header/ds1631.h"
+#include "header/buttons.h"
+#include "header/rotary.h"
+#include "header/serial.h"
 
 volatile char thres[2] = {70, 80};
 volatile unsigned char button = 1;
-volatile unsigned char state = 0; //0: 00, 1: 01, 2: 10, 3: 11
+volatile unsigned char state = 0; // 0: 00, 1: 01, 2: 10, 3: 11
 
+/*
+  init_io_port - Sets DDR of IO ports depending on desired values.
+*/
 void init_io_port(unsigned char b, unsigned char c, unsigned char d) {
   DDRB |= b;
   DDRC |= c;
   DDRD |= d;
 }
 
+/*
+  convert - Converts Celsius to Fahrenheit.
+*/
 char convert(unsigned char* celsius) {
-  //use appropriate formula depending on second degree of Celsius
+  // Use appropriate formula depending on second degree of Celsius
   if(celsius[1]==0x80) {
     return (celsius[0]+1)*4/5 + celsius[0] + 32;
   } else {
@@ -33,6 +38,9 @@ char convert(unsigned char* celsius) {
   }
 }
 
+/*
+  heat_or_cool - Turns on heater or aircon depending on local temp.
+*/
 void heat_or_cool(unsigned char f) {
   if(f>thres[1]) {
     PORTC |= 0x04; //turn on aircon (green LED)
@@ -46,6 +54,10 @@ void heat_or_cool(unsigned char f) {
   }
 }
 
+/*
+  make_thres_valid - Makes sure that upper threshold doesn't go
+  below lower threshold and vice versa.
+*/
 void make_thres_valid() {
   if(thres[0] > thres[1] && !button) {
     thres[0] = thres[1];
@@ -55,9 +67,14 @@ void make_thres_valid() {
   }
 }
 
+/*
+  init_all - Calls all init functions and configures ports
+  outside functionality of other .c files.
+*/
 void init_all() {
-  PORTC |= (1<<PC5) | (1<<PC4); //enable pull-up for I2C
-  init_io_port(0x07, 0x06, 0xF0);
+  PORTC |= (1<<PC5) | (1<<PC4); // Enable pull-up for I2C
+  PORTB &= ~(1<<PB3); // Enable tri-state buffer
+  init_io_port(0x0F, 0x06, 0xF0);
   init_rotary();
   init_buttons();
   init_lcd();
@@ -66,6 +83,9 @@ void init_all() {
   init_serial();
 }
 
+/*
+  set_labels - Prints labels for LCD screen.
+*/
 void set_labels() {
   stringout("Lo:");
   moveto(0x80+9);
@@ -77,36 +97,36 @@ void set_labels() {
 }
 
 int main() {
-  char buff[5]; //buffer for printing to LCD later
-  char prevf = -128; //for checking if temp changed
-  char prevrmtf = -128; //for checking if prev changed
-  char prevthres[2] = {-128, -128}; //for checking if threshold changed
-  unsigned char celsius[2]; //for storing temp in Celsius
+  char buff[5]; // Buffer for printing to LCD later
+  char prevf = -128; // For checking if temp changed
+  char prevthres[2] = {-128, -128}; // For checking if threshold changed
+  unsigned char celsius[2]; // For storing temp in Celsius
 
   init_all();
-  sei();
+  sei(); // Enable global interrupts
 
-  //print all needed labels
   set_labels();
 
   while(1) {
     make_thres_valid();
     ds1631_temp(celsius);
     char far = convert(celsius);
-    char rmtfar = rx_temp();
-
+    
+    // Low threshold changed
     if(prevthres[0] != thres[0]) {
       moveto(0x80+3);
       sprintf(buff, "%d  ", thres[0]);
       stringout(buff);
       prevthres[0] = thres[0];
     }
+    // High threshold changed
     if(prevthres[1] != thres[1]) {
       moveto(0x80+12);
       sprintf(buff, "%d  ", thres[1]);
       stringout(buff);
       prevthres[1] = thres[1];
     }
+    // Local temperature changed
     if(prevf != far) {
       moveto(0xc0+3);
       sprintf(buff, "%d", far);
@@ -114,26 +134,13 @@ int main() {
       tx_temp(far);
       prevf = far;
     }
-    //valid serial value received
-    if(prevrmtf != rmtfar && rmtfar != -128) {
-      moveto(0xc0+12);
-      sprintf(buff, "%d", rmtfar);
-      stringout(buff);
-      prevrmtf = rmtfar;
+    // Serial rx byte received
+    if(got_byte()) {
+      print_rx_temp();
     }
-    //invalid serial value received
-    if(rmtfar == -128) {
-      moveto(0xc0+12);
-      if(prevrmtf != -128) {
-        sprintf(buff, "%d", prevrmtf);
-        stringout(buff);
-      } else {
-        stringout("NONE");
-      }
-    }
+    moveto(0xd0); // Remove cursor
 
-    moveto(0xd0); //remove cursor
-    heat_or_cool(far); //turn on heater or cooler depending on temp
+    heat_or_cool(far); // Turn on heater or cooler depending on temp
   }
 
   while (1) {}

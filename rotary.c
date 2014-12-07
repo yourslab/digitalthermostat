@@ -1,16 +1,19 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
-#include "rotary.h"
+#include "header/rotary.h"
 
 extern volatile unsigned char button;
 extern volatile char thres[2];
 extern volatile unsigned char state; //0: 00, 1: 01, 2: 10, 3: 11
 
+/*
+  init_rotary - Initializes state and configures certain ports.
+*/
 void init_rotary() {
   PCICR |= (1<<PCIE2);
   PCMSK2 = 0b00001100;
-  PORTD |= (1<<PD2) | (1<<PD3); //enable pull-up
+  PORTD |= (1<<PD2) | (1<<PD3); // Enable pull-up for rotary encoder
 
   unsigned char a = (PIND & (1<<PD2));
   unsigned char b = (PIND & (1<<PD3));
@@ -27,6 +30,10 @@ void init_rotary() {
   }
 }
 
+/*
+  ISR(PCINT2_vect) - Changes value of threshold and state depending
+  on rotary encoder and button.
+*/
 ISR(PCINT2_vect) {
   unsigned char a = (PIND & (1<<PD2));
   unsigned char b = (PIND & (1<<PD3));
