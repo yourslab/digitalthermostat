@@ -6,6 +6,7 @@
 *************************************************************/
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <stdio.h>
 
 #include "header/lcd.h"
 #include "header/ds1631.h"
@@ -97,6 +98,7 @@ void set_labels() {
 }
 
 int main() {
+  char rmtfar;
   char buff[5]; // Buffer for printing to LCD later
   char prevf = -128; // For checking if temp changed
   char prevthres[2] = {-128, -128}; // For checking if threshold changed
@@ -136,7 +138,10 @@ int main() {
     }
     // Serial rx byte received
     if(got_byte()) {
-      print_rx_temp();
+      get_rx_temp(&rmtfar);
+      moveto(0xc0+12);
+      sprintf(buff, "%d", rmtfar);
+      stringout(buff);
     }
     moveto(0xd0); // Remove cursor
 

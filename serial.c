@@ -37,8 +37,7 @@ void tx_char(char ch) {
   UDR0 = ch;
 }
 
-void print_rx_temp() {
-  char buff[5];
+void get_rx_temp(char* rmtfar) {
   char r_temp[4];
   unsigned char i;
 
@@ -56,16 +55,12 @@ void print_rx_temp() {
     }
   }
   
-  // Convert string to number
+  // Convert all chars to a valid number
   char rmt = (r_temp[1]-'0')*100 + (r_temp[2]-'0')*10 + (r_temp[3]-'0');
   if(r_temp[0] == '-') {
     rmt = 0-rmt;
   }
-
-  // Print out final received temp
-  moveto(0xc0+12);
-  sprintf(buff, "%d  ", rmt);
-  stringout(buff);
+  *rmtfar = rmt;
 }
 
 
