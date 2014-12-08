@@ -1,7 +1,6 @@
 #include <avr/io.h>
 
 #include "header/serial.h"
-#include "header/lcd.h"
 
 #define FOSC 16000000 // Clock frequency
 #define BAUD 9600 // Baud rate used
