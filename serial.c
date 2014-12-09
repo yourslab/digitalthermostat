@@ -1,4 +1,5 @@
 #include <avr/io.h>
+#include <avr/interrupt.h>
 
 #include "header/serial.h"
 
@@ -53,6 +54,7 @@ void tx_char(char ch) {
   passes it to a variable.
 */
 void get_rx_temp(char* rmtfar) {
+  cli(); // That way, no interrupts while receiving char
   char r_temp[4];
   unsigned char i;
 
@@ -76,6 +78,7 @@ void get_rx_temp(char* rmtfar) {
     rmt = 0-rmt;
   }
   *rmtfar = rmt;
+  sei(); // Re-enable the global interrupts
 }
 
 /*
@@ -83,7 +86,7 @@ void get_rx_temp(char* rmtfar) {
   tx_char(char ch) function.
 */
 void tx_temp(char far) {
-  char t_temp[5];
+  char t_temp[4];
   if(far>=0) {
     t_temp[0] = '+';
   } else {
