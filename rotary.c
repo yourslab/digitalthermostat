@@ -15,8 +15,9 @@ void init_rotary() {
   PCMSK2 = 0b00001100;
   PORTD |= (1<<PD2) | (1<<PD3); // Enable pull-up for rotary encoder
 
-  unsigned char a = (PIND & (1<<PD2));
-  unsigned char b = (PIND & (1<<PD3));
+  unsigned char pin_d = PIND; // Read PIND only once
+  unsigned char a = (pin_d & (1<<PD2));
+  unsigned char b = (pin_d & (1<<PD3));
 
   //initialize the states
   if(a && b) {
@@ -35,8 +36,9 @@ void init_rotary() {
   on rotary encoder and button.
 */
 ISR(PCINT2_vect) {
-  unsigned char a = (PIND & (1<<PD2));
-  unsigned char b = (PIND & (1<<PD3));
+  unsigned char pin_d = PIND; // Read PIND only once
+  unsigned char a = (pin_d & (1<<PD2));
+  unsigned char b = (pin_d & (1<<PD3));
 
   if(state == 0) { //00
     if(b) { //00->10

@@ -33,7 +33,8 @@ void init_io_port(unsigned char b, unsigned char c, unsigned char d) {
 char convert(unsigned char* celsius) {
   // Use appropriate formula depending on second degree of Celsius
   if(celsius[1]==0x80) {
-    return (celsius[0]+1)*4/5 + celsius[0] + 32;
+    // 33 instead of 32 because of Algebra
+    return (celsius[0]+1)*4/5 + celsius[0] + 33;
   } else {
     return celsius[0]*4/5 + celsius[0] + 32;
   }

@@ -19,8 +19,9 @@ void init_buttons() {
   and changes button state variable accordingly.
 */
 ISR(PCINT0_vect) {
-  unsigned char red = !(PINB & (1<<PB4));
-  unsigned char green = !(PINB & (1<<PB5));
+  unsigned char pin_b = PINB; // Read PINB only once
+  unsigned char red = !(pin_b & (1<<PB4));
+  unsigned char green = !(pin_b & (1<<PB5));
   if(red && !green) {
     button = 0;
   } else if(green && !red) {
